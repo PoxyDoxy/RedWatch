@@ -1,5 +1,5 @@
 
-# RedditWatch
+# RedWatch
 
 Give it a list of Subreddits, and your own reddit api key, and you're off to the races.
 
