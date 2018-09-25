@@ -133,7 +133,7 @@ def process_submission(submission):
             imageUrl = ""
             try:
                 # Image?
-                imageUrl = soup.select('.zoom')[0]['href']
+                imageUrl = soup.find('link', {'rel': 'image_src'})['href']
             except:
                 # Gif?
                 imageUrl = submission.url.replace(".gifv", ".gif")
