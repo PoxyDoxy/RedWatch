@@ -136,8 +136,13 @@ def process_submission(submission):
                 imageUrl = soup.find('link', {'rel': 'image_src'})['href']
             except:
                 # Gif?
-                imageUrl = submission.url.replace(".gifv", ".gif")
-                imageUrl = submission.url.replace("imgur.com", "i.imgur.com")
+                imageUrl = submission.url.replace(".gifv", "")
+                imageUrl = str(imageUrl) + ".gif"
+
+                if imageUrl.startswith('//'):
+                    # if no schema is supplied in the url, prepend 'http:' to it
+                    imageUrl = 'http:' + imageUrl
+
                 response = requests.get(imageUrl)
                 if response.status_code != 200:
                     if response.status_code == 404:
