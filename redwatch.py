@@ -7,14 +7,17 @@ subreddits = [
 	"wallpapers",
 	"anime_irl",
 	]
-MIN_SCORE = 100 # the default minimum score before it is downloaded
-loop_wait = 0 #0 = disabled, 10 = 10 seconds
+
+subreddits.reverse()
+
+MIN_SCORE = 0 # the default minimum score before it is downloaded
+loop_wait = 36000 #0 = disabled, 10 = 10 seconds
 #loop_wait = 3600 # 0 = disabled, 10 = 10 seconds
-max_threads = 100 # 1 thread per Mbit/s is a good rule of thumb
+max_threads = 1000 # 1 thread per Mbit/s is a good rule of thumb
 
 # Must be set to be able to scrape the Reddit API
-reddit_api_client_id = 'MY_CLIENT_ID'
-reddit_api_client_secret = 'MY_CLIENT_SECRET'
+reddit_api_client_id = '628mDO4YBQ2tRg'
+reddit_api_client_secret = 'ZEI3Bs1QoNBpEBn3-b7szURyBYw'
 reddit_api_user_agent = 'RedditImageDownloader'
 
 os.system('cls' if os.name == 'nt' else 'clear')
@@ -71,15 +74,44 @@ def process_submission(submission):
         #print("\n",submission.url)
         # Check for all the cases where we will skip a submission:
 
-        if ("imgur.com/" not in submission.url) & ("gfycat.com/" not in submission.url):
-            break # skip non-imgur submissions
+        supportedDomains = ["imgur.com","gfycat.com","redgifs.con","i.redd.it"]
+        doProcess = 0
+        for domain in supportedDomains:
+            if domain not in submission.url:
+                doProcess = doProcess + 1
+                
+        if doProcess < 1:
+            break
 
         if submission.score < MIN_SCORE:
             break # skip submissions that haven't even reached 100 (thought this should be rare if we're collecting the "hot" submission)
         if len(glob.glob('reddit_%s_%s_*' % (subreddit, submission.id))) > 0:
             break # we've already downloaded files for this reddit submission
 
-        if ('http://imgur.com/a/' in submission.url) | ('https://imgur.com/a/' in submission.url):
+        if ('http://redgifs.com/watch/' in submission.url) | ('https://redgifs.com/watch/' in submission.url):
+            htmlSource = requests.get(submission.url).text
+            soup = BeautifulSoup(htmlSource, "html.parser")
+            downloadURL = ""
+            matches = soup.select(".video.media source")
+            for match in matches:
+                downloadURL = match['src'].replace("-mobile","")
+                if '?' in downloadURL:
+                    imageFile = downloadURL[downloadURL.rfind('/') + 1:downloadURL.rfind('?')]
+                else:
+                    imageFile = downloadURL[downloadURL.rfind('/') + 1:]
+                localFileName = 'reddit_%s_%s_redgifs_%s' % (subreddit, submission.id, imageFile)
+                downloadImage(downloadURL,localFileName,subreddit)
+
+        elif ('http://i.redd.it/' in submission.url) | ('https://i.redd.it/' in submission.url):
+            downloadURL = submission.url
+            if '?' in downloadURL:
+                imageFile = downloadURL[downloadURL.rfind('/') + 1:downloadURL.rfind('?')]
+            else:
+                imageFile = downloadURL[downloadURL.rfind('/') + 1:]
+            localFileName = 'reddit_%s_%s_%s' % (subreddit, submission.id, imageFile)
+            downloadImage(downloadURL,localFileName,subreddit)
+            
+        elif ('http://imgur.com/a/' in submission.url) | ('https://imgur.com/a/' in submission.url):
             #print('Album: ' + submission.url)
             # This is an album submission.
             if 'https' in submission.url:
@@ -118,9 +150,23 @@ def process_submission(submission):
             if '?' in imgurFilename:
                 # The regex doesn't catch a "?" at the end of the filename, so we remove it here.
                 imgurFilename = imgurFilename[:imgurFilename.find('?')]
-
-            localFileName = 'reddit_%s_%s_album_None_imgur_%s' % (subreddit, submission.id, imgurFilename)
-            downloadImage(submission.url, localFileName, subreddit)
+                
+            if '.gifv' in submission.url:
+                htmlSource = requests.get(submission.url).text
+                soup = BeautifulSoup(htmlSource, "html.parser")
+                downloadUrl = ""
+                matches = soup.select('meta[itemprop=contentURL]')
+                for match in matches:
+                    downloadUrl = match['content']
+                    if '?' in downloadUrl:
+                        imageFile = downloadUrl[downloadUrl.rfind('/') + 1:downloadUrl.rfind('?')]
+                    else:
+                        imageFile = downloadUrl[downloadUrl.rfind('/') + 1:]
+                    localFileName = 'reddit_%s_%s_imgur_%s' % (subreddit, submission.id, imageFile)
+                    downloadImage(downloadUrl,localFileName,subreddit)
+            else:
+                localFileName = 'reddit_%s_%s_album_None_imgur_%s' % (subreddit, submission.id, imgurFilename)
+                downloadImage(submission.url, localFileName, subreddit)
 
         elif ('http://imgur.com/' in submission.url) | ('https://imgur.com/' in submission.url):
             #print('Page: ' + submission.url)
@@ -237,4 +283,4 @@ while True:
             print("\rStarting again in %s seconds.                       \r" % time_remaining, end="")
             time.sleep(1)
             time_remaining -= 1
-        os.system('cls' if os.name == 'nt' else 'clear')
+os.system('cls' if os.name == 'nt' else 'clear')
