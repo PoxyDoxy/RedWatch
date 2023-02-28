@@ -7,14 +7,17 @@ subreddits = [
 	"wallpapers",
 	"anime_irl",
 	]
-MIN_SCORE = 100 # the default minimum score before it is downloaded
-loop_wait = 0 #0 = disabled, 10 = 10 seconds
+
+subreddits.reverse()
+
+MIN_SCORE = 0 # the default minimum score before it is downloaded
+loop_wait = 36000 #0 = disabled, 10 = 10 seconds
 #loop_wait = 3600 # 0 = disabled, 10 = 10 seconds
-max_threads = 100 # 1 thread per Mbit/s is a good rule of thumb
+max_threads = 1000 # 1 thread per Mbit/s is a good rule of thumb
 
 # Must be set to be able to scrape the Reddit API
-reddit_api_client_id = 'MY_CLIENT_ID'
-reddit_api_client_secret = 'MY_CLIENT_SECRET'
+reddit_api_client_id = '628mDO4YBQ2tRg'
+reddit_api_client_secret = 'ZEI3Bs1QoNBpEBn3-b7szURyBYw'
 reddit_api_user_agent = 'RedditImageDownloader'
 
 os.system('cls' if os.name == 'nt' else 'clear')
