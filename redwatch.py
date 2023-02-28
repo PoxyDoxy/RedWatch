@@ -71,15 +71,40 @@ def process_submission(submission):
         #print("\n",submission.url)
         # Check for all the cases where we will skip a submission:
 
-        if ("imgur.com/" not in submission.url) & ("gfycat.com/" not in submission.url):
-            break # skip non-imgur submissions
+        supportedDomains = ["imgur.com","gfycat.com","redgifs.con","i.redd.it"]
+
+        if submission.url not in supportedDomains:
+            break # skip non-imgur/gfycay/redgifs submissions
 
         if submission.score < MIN_SCORE:
             break # skip submissions that haven't even reached 100 (thought this should be rare if we're collecting the "hot" submission)
         if len(glob.glob('reddit_%s_%s_*' % (subreddit, submission.id))) > 0:
             break # we've already downloaded files for this reddit submission
 
-        if ('http://imgur.com/a/' in submission.url) | ('https://imgur.com/a/' in submission.url):
+        if ('http://redgifs.com/watch/' in submission.url) | ('https://redgifs.com/watch/' in submission.url):
+            htmlSource = requests.get(submission.url).text
+            soup = BeautifulSoup(htmlSource, "html.parser")
+            downloadURL = ""
+            matches = soup.select(".video.media source")
+            for match in matches:
+                downloadURL = match['src'].replace("-mobile","")
+                if '?' in downloadURL:
+                    imageFile = downloadURL[downloadURL.rfind('/') + 1:downloadURL.rfind('?')]
+                else:
+                    imageFile = downloadURL[downloadURL.rfind('/') + 1:]
+                localFileName = 'reddit_%s_%s_redgifs_%s' % (subreddit, submission.id, imageFile)
+                downloadImage(downloadURL,localFileName,subreddit)
+
+        elif ('http://i.redd.it/' in submission.url) | ('https://i.redd.it/' in submission.url):
+            downloadURL = submission.url
+            if '?' in downloadURL:
+                imageFile = downloadURL[downloadURL.rfind('/') + 1:downloadURL.rfind('?')]
+            else:
+                imageFile = downloadURL[downloadURL.rfind('/') + 1:]
+            localFileName = 'reddit_%s_%s_%s' % (subreddit, submission.id, imageFile)
+            downloadImage(downloadURL,localFileName,subreddit)
+            
+        elif ('http://imgur.com/a/' in submission.url) | ('https://imgur.com/a/' in submission.url):
             #print('Album: ' + submission.url)
             # This is an album submission.
             if 'https' in submission.url:
@@ -237,4 +262,4 @@ while True:
             print("\rStarting again in %s seconds.                       \r" % time_remaining, end="")
             time.sleep(1)
             time_remaining -= 1
-        os.system('cls' if os.name == 'nt' else 'clear')
+os.system('cls' if os.name == 'nt' else 'clear')
