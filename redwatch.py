@@ -147,9 +147,23 @@ def process_submission(submission):
             if '?' in imgurFilename:
                 # The regex doesn't catch a "?" at the end of the filename, so we remove it here.
                 imgurFilename = imgurFilename[:imgurFilename.find('?')]
-
-            localFileName = 'reddit_%s_%s_album_None_imgur_%s' % (subreddit, submission.id, imgurFilename)
-            downloadImage(submission.url, localFileName, subreddit)
+                
+            if '.gifv' in submission.url:
+                htmlSource = requests.get(submission.url).text
+                soup = BeautifulSoup(htmlSource, "html.parser")
+                downloadUrl = ""
+                matches = soup.select('meta[itemprop=contentURL]')
+                for match in matches:
+                    downloadUrl = match['content']
+                    if '?' in downloadUrl:
+                        imageFile = downloadUrl[downloadUrl.rfind('/') + 1:downloadUrl.rfind('?')]
+                    else:
+                        imageFile = downloadUrl[downloadUrl.rfind('/') + 1:]
+                    localFileName = 'reddit_%s_%s_imgur_%s' % (subreddit, submission.id, imageFile)
+                    downloadImage(downloadUrl,localFileName,subreddit)
+            else:
+                localFileName = 'reddit_%s_%s_album_None_imgur_%s' % (subreddit, submission.id, imgurFilename)
+                downloadImage(submission.url, localFileName, subreddit)
 
         elif ('http://imgur.com/' in submission.url) | ('https://imgur.com/' in submission.url):
             #print('Page: ' + submission.url)
