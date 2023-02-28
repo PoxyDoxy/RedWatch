@@ -72,9 +72,13 @@ def process_submission(submission):
         # Check for all the cases where we will skip a submission:
 
         supportedDomains = ["imgur.com","gfycat.com","redgifs.con","i.redd.it"]
-
-        if submission.url not in supportedDomains:
-            break # skip non-imgur/gfycay/redgifs submissions
+        doProcess = 0
+        for domain in supportedDomains:
+            if domain not in submission.url:
+                doProcess = doProcess + 1
+                
+        if doProcess < 1:
+            break
 
         if submission.score < MIN_SCORE:
             break # skip submissions that haven't even reached 100 (thought this should be rare if we're collecting the "hot" submission)
